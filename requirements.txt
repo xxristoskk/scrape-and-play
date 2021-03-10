@@ -1,0 +1,4 @@
+streamlit
+spotipy
+beautifulsoup4
+requests
