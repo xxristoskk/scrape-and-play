@@ -4,6 +4,7 @@ import time
 import re
 import pickle
 
+#function checks to make sure at least one of the genres match
 def match_genres(list1, list2):
     match = []
     for x in list1:
@@ -13,17 +14,12 @@ def match_genres(list1, list2):
             continue 
     return match
 
-def get_releases(articles, user_genres):
+#function to scrape and save the data
+def get_releases(articles, user_genres, year):
     releases = []
     for n in range(len(articles)):
         genres = articles[n].find_all('a', rel='category tag')
         genres = [x.get_text() for x in genres]
-
-        if any(match_genres(genres, user_genres)):
-            pass
-        else:
-            continue
-
         title = articles[n].find('a', class_= 'title').get_text()
         try:
             if "Various Artists" in title:
@@ -42,17 +38,21 @@ def get_releases(articles, user_genres):
                 continue
         except:
             continue
+        if any(match_genres(genres, user_genres)) and year == release_year:
+            pass
+        else:
+            continue
         release_dict = {
             'artist': artist_name.lower(),
             'title': release_title.lower(),
             'year': release_year.lower(),
             'genres': [x.lower() for x in genres]
         }
-        print(release_dict)
         releases.append(release_dict)
     return releases
 
-def scrape(pages, user_genres):
+#function to navigate the blog
+def scrape(pages, user_genres, year):
     all_pages = []
     for x in range(1,pages):
         print(f'Scraping page {x}')
@@ -60,7 +60,7 @@ def scrape(pages, user_genres):
         soup = BeautifulSoup(page.text, 'html.parser')
         columns = soup.find('div', class_ = 'columns')
         articles = columns.find_all('div', class_='column-13')
-        page_releases = get_releases(articles, user_genres)
+        page_releases = get_releases(articles, user_genres, year)
         for release in page_releases:
             all_pages.append(release)
         time.sleep(2)

@@ -4,9 +4,11 @@ import scraper
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import time
+import os
 
 scope = 'playlist-modify-public'
-
+client_id = os.environ['client_id']
+client_secret = os.environ['client_secret']
 
 genres = pickle.load(open('genres.pkl', 'rb'))
 years = list(range(1990,2022))
@@ -20,11 +22,16 @@ oauth = SpotifyOAuth(
 
 def main():
     st.title('Nodata.tv Spotify Playlist Maker')
+    st.header('By Xristos Katsaros')
+    st.subheader('This app utilizes web scraping to find releases covered by Nodata.tv and places them in a Spotify playlist')
     
-    pages = st.selectbox('Pages', list(range(1,300)))
-    user_genres = st.selectbox('Genre 1', list(genres))
+    pages = st.selectbox('Pages', list(range(1,1800)))
+    user_genre1 = st.selectbox('Genre 1', list(genres))
+    user_genre2 = st.selectbox('Genre 2', list(genres))
+    user_genres = [user_genre1, user_genre2]
+    username = st.text_input('Spotify username')
     playlist_name = st.text_input('Name of new or existing playlist')
-    # year = st.selectbox('Year', years)
+    year = str(st.selectbox('Year', years))
 
     if st.button('Make playlist'):
         #look for cached token
@@ -45,6 +52,7 @@ def main():
             token = token_info['access_token']
             sp = spotipy.Spotify(auth=token)
 
+        #spotify only allows 20 albums per request so bigger playlists need to be broken up
         def break_up_albums(album_ids):
             trax = []
             size = len(album_ids)
@@ -80,27 +88,28 @@ def main():
 
         #determine playlist ID
         if playlist_name not in playlists:
-            sp.user_playlist_create(user='xristosk', name=playlist_name) #create a new playlist
+            sp.user_playlist_create(user=username, name=playlist_name) #create a new playlist
             playlist_id = sp.current_user_playlists()['items'][0]['id'] #grab new playlist ID
         elif playlist_name in playlists:
             playlist_id = sp.current_user_playlists()['items'][playlists.index(playlist_name)]['id'] #find ID of existing playlist
 
-        scrape_results = scraper.scrape(int(pages), user_genres) #scrapes nodata.tv
+        #the 2 main functions for scraping & searching spotify
+        scrape_results = scraper.scrape(int(pages), user_genres, year) #scrapes nodata.tv
         spotify_results = search_spotify(scrape_results) #inserts scraped results into search function
 
         #function checks length of tracklist and adds songs according the the API limit (100 tracks per request)
         def confirm_and_add(results):
             size = len(results)
             if size <= 100:
-                return sp.user_playlist_add_tracks(user='xristosk', playlist_id=playlist_id, tracks=results)
+                return sp.user_playlist_add_tracks(user=username, playlist_id=playlist_id, tracks=results)
             else:
                 while size > 100:
                     case = results[size-100:size]
-                    sp.user_playlist_add_tracks(user='xristosk', playlist_id=playlist_id, tracks=case)
+                    sp.user_playlist_add_tracks(user=username, playlist_id=playlist_id, tracks=case)
                     size = size - 100
                     time.sleep(3)
                 case = results[:size]
-                return sp.user_playlist_add_tracks(user='xristosk', playlist_id=playlist_id, tracks=case)
+                return sp.user_playlist_add_tracks(user=username, playlist_id=playlist_id, tracks=case)
 
         confirm_and_add(spotify_results)
 
