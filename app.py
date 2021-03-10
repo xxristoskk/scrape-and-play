@@ -20,6 +20,9 @@ oauth = SpotifyOAuth(
     scope=scope
     )
 
+#initialize progress bar
+my_bar = st.progress(0)
+
 def main():
     st.title('Nodata.tv Spotify Playlist Maker')
     st.header('By Xristos Katsaros')
@@ -82,8 +85,12 @@ def main():
                 else:
                     print(f"Couldn't find {release['artist']}, {release['title']} :(")
                     continue
+                my_bar.progress(releases.index(release) + 1)
                 time.sleep(1)
+            st.balloons()
             return break_up_albums(album_ids)
+
+        #get the names of of all the user's playlists
         playlists = [x['name'].lower() for x in sp.current_user_playlists()['items']]
 
         #determine playlist ID
