@@ -16,7 +16,7 @@ years = list(range(1990,2022))
 oauth = SpotifyOAuth(
     client_id=client_id,
     client_secret=client_secret,
-    redirect_uri='http://localhost/',
+    redirect_uri='http://localhost:8080/',
     scope=scope
     )
 
@@ -41,7 +41,7 @@ def main():
         if not token_info:
             auth_url = oauth.get_authorize_url()
             st.write(auth_url)
-            response = st.text_input('Click the above link, then paste the redirect url here and hit enter: ')
+            response = st.text_input('Click the above link, then copy & paste the url in the new tab here, then press enter: ')
             if response == "":
                 time.sleep(5)
             code = oauth.parse_response_code(response)
