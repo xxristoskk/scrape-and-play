@@ -48,7 +48,7 @@ def get_releases(articles, user_genres, year):
             'year': release_year.lower(),
             'genres': [x.lower() for x in genres]
         }
-        print(release)
+        print(release_dict)
         releases.append(release_dict)
     return releases
 
