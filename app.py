@@ -6,23 +6,6 @@ from spotipy.oauth2 import SpotifyOAuth
 import time
 import os
 
-#defining spotify oauth parameters
-scope = 'playlist-modify-public'
-client_id = os.environ['client_id']
-client_secret = os.environ['client_secret']
-
-#initializing spotify oauth
-oauth = SpotifyOAuth(
-    client_id=client_id,
-    client_secret=client_secret,
-    redirect_uri='http://localhost:8080/',
-    scope=scope
-    )
-
-#defining global variables
-genres = pickle.load(open('genres.pkl', 'rb'))
-years = list(range(1990,2022))
-
 #defining app functions
 #spotify only allows 20 albums per request so bigger playlists need to be broken up
 def break_up_albums(album_ids, sp):
@@ -83,24 +66,29 @@ def main():
 
     st.header('Connect to Spotify')
 
-    #look for cached token
-    token_info = oauth.get_cached_token()
+    #defining spotify oauth parameters
+    scope = 'playlist-modify-public'
+    client_id = os.environ['client_id']
+    client_secret = os.environ['client_secret']
 
-    #request a new token if none found
-    if not token_info:
-        auth_url = oauth.get_authorize_url()
-        st.write(auth_url)
-        response = st.text_input('Click the above link, then copy & paste the url in the new tab here, then press enter: ')
-        if response == "":
-            time.sleep(5)
-        code = oauth.parse_response_code(response)
-        token_info = oauth.get_access_token(code)
-        token = token_info['access_token']
-        sp = spotipy.Spotify(auth=token)
-    else:
-        token = token_info['access_token']
-        sp = spotipy.Spotify(auth=token)
+    #initializing spotify oauth
+    oauth = SpotifyOAuth(
+        client_id=client_id,
+        client_secret=client_secret,
+        redirect_uri='http://localhost:8080/',
+        scope=scope
+        )
+    auth_url = oauth.get_authorize_url()
+    st.write(auth_url)
+    response = st.text_input('Click the above link, then copy & paste the url in the new tab here, then press enter: ')
+    code = oauth.parse_response_code(response)
+    token_info = oauth.get_access_token(code)
+    token = token_info['access_token']
+    sp = spotipy.Spotify(auth=token)
 
+    #defining variables
+    genres = pickle.load(open('genres.pkl', 'rb'))
+    years = list(range(1990,2022))
 
     st.header('Select playlist preferences')
     st.text('Number of pages to scrape on the Nodata blog')
