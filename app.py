@@ -54,6 +54,13 @@ def main():
         else:
             token = token_info['access_token']
             sp = spotipy.Spotify(auth=token)
+        
+        #get the names of of all the user's playlists
+        playlists = [x['name'].lower() for x in sp.current_user_playlists()['items']]
+        
+        st.write('User Playlists:')
+        for playlist in playlists:
+            st.text(playlist)
 
         #spotify only allows 20 albums per request so bigger playlists need to be broken up
         def break_up_albums(album_ids):
@@ -89,9 +96,6 @@ def main():
                 time.sleep(1)
             st.balloons()
             return break_up_albums(album_ids)
-
-        #get the names of of all the user's playlists
-        playlists = [x['name'].lower() for x in sp.current_user_playlists()['items']]
 
         #determine playlist ID
         if playlist_name not in playlists:
