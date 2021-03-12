@@ -89,8 +89,8 @@ def main():
     st.header('Select playlist preferences')
     st.text('Number of pages to scrape on the Nodata blog')
     pages = st.selectbox('Pages', list(range(1,1800)))
-    user_genre1 = st.selectbox('Genre 1', list(genres).sort())
-    user_genre2 = st.selectbox('Genre 2', list(genres).sort())
+    user_genre1 = st.selectbox('Genre 1', list(genres))
+    user_genre2 = st.selectbox('Genre 2', list(genres))
     user_genres = [user_genre1, user_genre2]
     username = st.text_input('Spotify username')
     playlist_name = st.text_input('Name of new or existing playlist')
