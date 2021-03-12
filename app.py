@@ -100,9 +100,7 @@ def main():
     else:
         token = token_info['access_token']
         sp = spotipy.Spotify(auth=token)
-    
-    if not sp:
-        st.stop()
+
 
     st.header('Select playlist preferences')
     st.text('Number of pages to scrape on the Nodata blog')
