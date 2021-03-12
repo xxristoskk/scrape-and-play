@@ -81,10 +81,6 @@ def main():
     auth_url = oauth.get_authorize_url()
     st.write(auth_url)
     response = st.text_input('Click the above link, then copy & paste the url in the new tab here, then press enter: ')
-    code = oauth.parse_response_code(response)
-    token_info = oauth.get_access_token(code)
-    token = token_info['access_token']
-    sp = spotipy.Spotify(auth=token)
 
     #defining variables
     genres = pickle.load(open('genres.pkl', 'rb'))
@@ -101,6 +97,12 @@ def main():
     year = str(st.selectbox('Year', years))
 
     if st.button('Make playlist'):
+        #connect to spotify
+        code = oauth.parse_response_code(response)
+        token_info = oauth.get_access_token(code)
+        token = token_info['access_token']
+        sp = spotipy.Spotify(auth=token)
+
         #get the names of of all the user's playlists
         playlists = [x['name'].lower() for x in sp.current_user_playlists()['items']]
 
