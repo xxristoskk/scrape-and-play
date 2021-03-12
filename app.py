@@ -40,7 +40,9 @@ def search_spotify(releases, sp):
         else:
             print(f"Couldn't find {release['artist']}, {release['title']} :(")
             continue
-        my_bar.progress(releases.index(release) + 1)
+        #update progress
+        percent_finished = (releases.index(release) / len(releases)) * 100
+        my_bar.progress(percent_finished)
         time.sleep(1)
     return break_up_albums(album_ids, sp)
 
@@ -117,8 +119,11 @@ def main():
             playlist_id = sp.current_user_playlists()['items'][playlists.index(playlist_name)]['id'] #find ID of existing playlist
 
         #the 2 main functions for scraping & searching spotify
-        scrape_results = scraper.scrape(int(pages), user_genres, year) #scrapes nodata.tv
-        spotify_results = search_spotify(scrape_results, sp) #inserts scraped results into search function
+        with st.spinner("Scraping Nodata.tv"):
+            scrape_results = scraper.scrape(int(pages), user_genres, year) #scrapes nodata.tv
+        st.success('Finished scraping!')
+        with st.spinner('Searching Spotify'):
+            spotify_results = search_spotify(scrape_results, sp) #inserts scraped results into search function
 
         confirm_and_add(spotify_results, username, playlist_id, sp)
 
