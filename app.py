@@ -20,7 +20,7 @@ oauth = SpotifyOAuth(
     )
 
 #defining global variables
-genres = list(pickle.load(open('genres.pkl', 'rb'))).sort()
+genres = pickle.load(open('genres.pkl', 'rb'))
 years = list(range(1990,2022))
 
 #defining app functions
@@ -82,7 +82,7 @@ def main():
     st.subheader('This app utilizes web scraping to find releases covered by Nodata.tv and places them in a Spotify playlist')
 
     st.header('Connect to Spotify')
-    
+
     #look for cached token
     token_info = oauth.get_cached_token()
 
@@ -101,11 +101,14 @@ def main():
         token = token_info['access_token']
         sp = spotipy.Spotify(auth=token)
     
+    if not sp:
+        st.stop()
+
     st.header('Select playlist preferences')
     st.text('Number of pages to scrape on the Nodata blog')
     pages = st.selectbox('Pages', list(range(1,1800)))
-    user_genre1 = st.selectbox('Genre 1', genres)
-    user_genre2 = st.selectbox('Genre 2', genres)
+    user_genre1 = st.selectbox('Genre 1', list(genres).sort())
+    user_genre2 = st.selectbox('Genre 2', list(genres).sort())
     user_genres = [user_genre1, user_genre2]
     username = st.text_input('Spotify username')
     playlist_name = st.text_input('Name of new or existing playlist')
