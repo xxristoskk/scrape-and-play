@@ -82,8 +82,7 @@ def main():
     st.subheader('This app utilizes web scraping to find releases covered by Nodata.tv and places them in a Spotify playlist')
 
     st.header('Connect to Spotify')
-    oauth = SpotifyOAuth(client_id=client_id,client_secret=client_secret,redirect_uri='http://localhost/',scope=scope)
-
+    
     #look for cached token
     token_info = oauth.get_cached_token()
 
