@@ -6,19 +6,71 @@ from spotipy.oauth2 import SpotifyOAuth
 import time
 import os
 
+#defining spotify oauth parameters
 scope = 'playlist-modify-public'
 client_id = os.environ['client_id']
 client_secret = os.environ['client_secret']
 
-genres = pickle.load(open('genres.pkl', 'rb'))
-years = list(range(1990,2022))
-
+#initializing spotify oauth
 oauth = SpotifyOAuth(
     client_id=client_id,
     client_secret=client_secret,
     redirect_uri='http://localhost:8080/',
     scope=scope
     )
+#defining global variables
+genres = pickle.load(open('genres.pkl', 'rb')).sort()
+years = list(range(1990,2022))
+
+#defining app functions
+#spotify only allows 20 albums per request so bigger playlists need to be broken up
+def break_up_albums(album_ids, sp):
+    trax = []
+    size = len(album_ids)
+    if size <= 20:
+        for album in list(sp.albums(album_ids)['albums']):
+            trax.extend([x['id'] for x in album['tracks']['items']])
+        return trax
+    else:
+        while size > 20:
+            case = album_ids[size-20:size]
+            for album in list(sp.albums(case)['albums']):
+                trax.extend([x['id'] for x in album['tracks']['items']])
+            size = size - 20
+            time.sleep(1)
+        case = album_ids[:size]
+        for album in list(sp.albums(case)['albums']):
+                trax.extend([x['id'] for x in album['tracks']['items']])
+        return trax
+
+#search function to find tracks on spotify and create list of track IDs to add to the playlist
+def search_spotify(releases, sp):
+    album_ids = []
+    for release in releases:
+        results = sp.search(q= f"{release['artist']} {release['title']}", type='album', limit=1)
+        if any(results['albums']['items']):
+            album_ids.append(results['albums']['items'][0]['id'])
+        else:
+            print(f"Couldn't find {release['artist']}, {release['title']} :(")
+            continue
+        my_bar.progress(releases.index(release) + 1)
+        time.sleep(1)
+    st.balloons()
+    return break_up_albums(album_ids, sp)
+
+#function checks length of tracklist and adds songs according the the API limit (100 tracks per request)
+def confirm_and_add(results, username, playlist_id, sp):
+    size = len(results)
+    if size <= 100:
+        return sp.user_playlist_add_tracks(user=username, playlist_id=playlist_id, tracks=results)
+    else:
+        while size > 100:
+            case = results[size-100:size]
+            sp.user_playlist_add_tracks(user=username, playlist_id=playlist_id, tracks=case)
+            size = size - 100
+            time.sleep(3)
+        case = results[:size]
+        return sp.user_playlist_add_tracks(user=username, playlist_id=playlist_id, tracks=case)
 
 #initialize progress bar
 my_bar = st.progress(0)
@@ -29,6 +81,7 @@ def main():
     st.subheader('This app utilizes web scraping to find releases covered by Nodata.tv and places them in a Spotify playlist')
 
     st.header('Connect to Spotify')
+    oauth = SpotifyOAuth(client_id=client_id,client_secret=client_secret,redirect_uri='http://localhost/',scope=scope)
     #look for cached token
     token_info = oauth.get_cached_token()
 
@@ -65,41 +118,6 @@ def main():
         for playlist in playlists:
             st.text(playlist)
 
-        #spotify only allows 20 albums per request so bigger playlists need to be broken up
-        def break_up_albums(album_ids):
-            trax = []
-            size = len(album_ids)
-            if size <= 20:
-                for album in list(sp.albums(album_ids)['albums']):
-                    trax.extend([x['id'] for x in album['tracks']['items']])
-                return trax
-            else:
-                while size > 20:
-                    case = album_ids[size-20:size]
-                    for album in list(sp.albums(case)['albums']):
-                        trax.extend([x['id'] for x in album['tracks']['items']])
-                    size = size - 20
-                    time.sleep(1)
-                case = album_ids[:size]
-                for album in list(sp.albums(case)['albums']):
-                        trax.extend([x['id'] for x in album['tracks']['items']])
-                return trax
-
-        #search function to find tracks on spotify and create list of track IDs to add to the playlist
-        def search_spotify(releases):
-            album_ids = []
-            for release in releases:
-                results = sp.search(q= f"{release['artist']} {release['title']}", type='album', limit=1)
-                if any(results['albums']['items']):
-                    album_ids.append(results['albums']['items'][0]['id'])
-                else:
-                    print(f"Couldn't find {release['artist']}, {release['title']} :(")
-                    continue
-                my_bar.progress(releases.index(release) + 1)
-                time.sleep(1)
-            st.balloons()
-            return break_up_albums(album_ids)
-
         #determine playlist ID
         if playlist_name not in playlists:
             sp.user_playlist_create(user=username, name=playlist_name) #create a new playlist
@@ -109,23 +127,9 @@ def main():
 
         #the 2 main functions for scraping & searching spotify
         scrape_results = scraper.scrape(int(pages), user_genres, year) #scrapes nodata.tv
-        spotify_results = search_spotify(scrape_results) #inserts scraped results into search function
+        spotify_results = search_spotify(scrape_results, sp) #inserts scraped results into search function
 
-        #function checks length of tracklist and adds songs according the the API limit (100 tracks per request)
-        def confirm_and_add(results):
-            size = len(results)
-            if size <= 100:
-                return sp.user_playlist_add_tracks(user=username, playlist_id=playlist_id, tracks=results)
-            else:
-                while size > 100:
-                    case = results[size-100:size]
-                    sp.user_playlist_add_tracks(user=username, playlist_id=playlist_id, tracks=case)
-                    size = size - 100
-                    time.sleep(3)
-                case = results[:size]
-                return sp.user_playlist_add_tracks(user=username, playlist_id=playlist_id, tracks=case)
-
-        confirm_and_add(spotify_results)
+        confirm_and_add(spotify_results, username, playlist_id, sp)
 
 
 if __name__ == '__main__':
