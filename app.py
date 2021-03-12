@@ -29,6 +29,9 @@ def break_up_albums(album_ids, sp):
 
 #search function to find tracks on spotify and create list of track IDs to add to the playlist
 def search_spotify(releases, sp):
+    #initialize progress bar
+    my_bar = st.progress(0)
+
     album_ids = []
     for release in releases:
         results = sp.search(q= f"{release['artist']} {release['title']}", type='album', limit=1)
@@ -39,13 +42,14 @@ def search_spotify(releases, sp):
             continue
         my_bar.progress(releases.index(release) + 1)
         time.sleep(1)
-    st.balloons()
     return break_up_albums(album_ids, sp)
 
 #function checks length of tracklist and adds songs according the the API limit (100 tracks per request)
 def confirm_and_add(results, username, playlist_id, sp):
     size = len(results)
     if size <= 100:
+        st.balloons()
+        st.write('Your playlist is ready!')
         return sp.user_playlist_add_tracks(user=username, playlist_id=playlist_id, tracks=results)
     else:
         while size > 100:
@@ -54,10 +58,9 @@ def confirm_and_add(results, username, playlist_id, sp):
             size = size - 100
             time.sleep(3)
         case = results[:size]
+        st.balloons()
+        st.write('Your playlist is ready!')
         return sp.user_playlist_add_tracks(user=username, playlist_id=playlist_id, tracks=case)
-
-#initialize progress bar
-my_bar = st.progress(0)
 
 def main():
     st.title('Nodata.tv Spotify Playlist Maker')
@@ -89,12 +92,12 @@ def main():
     st.header('Select playlist preferences')
     st.text('Number of pages to scrape on the Nodata blog')
     pages = st.selectbox('Pages', list(range(1,1800)))
-    user_genre1 = st.selectbox('Genre 1', list(genres))
-    user_genre2 = st.selectbox('Genre 2', list(genres))
+    user_genre1 = st.selectbox('Genre 1', sorted(list(genres)))
+    user_genre2 = st.selectbox('Genre 2', sorted(list(genres)))
     user_genres = [user_genre1, user_genre2]
     username = st.text_input('Spotify username')
     playlist_name = st.text_input('Name of new or existing playlist')
-    year = str(st.selectbox('Year', years))
+    year = str(st.selectbox('Year', sorted(years, 'reverse')))
 
     if st.button('Make playlist'):
         #connect to spotify
@@ -105,10 +108,6 @@ def main():
 
         #get the names of of all the user's playlists
         playlists = [x['name'].lower() for x in sp.current_user_playlists()['items']]
-
-        st.write('User Playlists:')
-        for playlist in playlists:
-            st.text(playlist)
 
         #determine playlist ID
         if playlist_name not in playlists:
