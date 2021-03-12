@@ -27,7 +27,28 @@ def main():
     st.title('Nodata.tv Spotify Playlist Maker')
     st.header('By Xristos Katsaros')
     st.subheader('This app utilizes web scraping to find releases covered by Nodata.tv and places them in a Spotify playlist')
+
+    st.header('Connect to Spotify')
+    #look for cached token
+    token_info = oauth.get_cached_token()
+
+    #request a new token if none found
+    if not token_info:
+        auth_url = oauth.get_authorize_url()
+        st.write(auth_url)
+        response = st.text_input('Click the above link, then copy & paste the url in the new tab here, then press enter: ')
+        if response == "":
+            time.sleep(5)
+        code = oauth.parse_response_code(response)
+        token_info = oauth.get_access_token(code)
+        token = token_info['access_token']
+        sp = spotipy.Spotify(auth=token)
+    else:
+        token = token_info['access_token']
+        sp = spotipy.Spotify(auth=token)
     
+    st.header('Select playlist preferences')
+    st.text('Number of pages to scrape on the Nodata blog')
     pages = st.selectbox('Pages', list(range(1,1800)))
     user_genre1 = st.selectbox('Genre 1', list(genres))
     user_genre2 = st.selectbox('Genre 2', list(genres))
@@ -37,27 +58,9 @@ def main():
     year = str(st.selectbox('Year', years))
 
     if st.button('Make playlist'):
-        #look for cached token
-        token_info = oauth.get_cached_token()
-
-        #request a new token if none found
-        if not token_info:
-            auth_url = oauth.get_authorize_url()
-            st.write(auth_url)
-            response = st.text_input('Click the above link, then copy & paste the url in the new tab here, then press enter: ')
-            if response == "":
-                time.sleep(5)
-            code = oauth.parse_response_code(response)
-            token_info = oauth.get_access_token(code)
-            token = token_info['access_token']
-            sp = spotipy.Spotify(auth=token)
-        else:
-            token = token_info['access_token']
-            sp = spotipy.Spotify(auth=token)
-        
         #get the names of of all the user's playlists
         playlists = [x['name'].lower() for x in sp.current_user_playlists()['items']]
-        
+
         st.write('User Playlists:')
         for playlist in playlists:
             st.text(playlist)
