@@ -97,7 +97,7 @@ def main():
     user_genres = [user_genre1, user_genre2]
     username = st.text_input('Spotify username')
     playlist_name = st.text_input('Name of new or existing playlist')
-    year = str(st.selectbox('Year', sorted(years, 'reverse')))
+    year = str(st.selectbox('Year', sorted(years, reverse=True)))
 
     if st.button('Make playlist'):
         #connect to spotify
