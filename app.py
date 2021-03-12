@@ -18,8 +18,9 @@ oauth = SpotifyOAuth(
     redirect_uri='http://localhost:8080/',
     scope=scope
     )
+
 #defining global variables
-genres = pickle.load(open('genres.pkl', 'rb')).sort()
+genres = list(pickle.load(open('genres.pkl', 'rb'))).sort()
 years = list(range(1990,2022))
 
 #defining app functions
@@ -82,6 +83,7 @@ def main():
 
     st.header('Connect to Spotify')
     oauth = SpotifyOAuth(client_id=client_id,client_secret=client_secret,redirect_uri='http://localhost/',scope=scope)
+
     #look for cached token
     token_info = oauth.get_cached_token()
 
@@ -103,8 +105,8 @@ def main():
     st.header('Select playlist preferences')
     st.text('Number of pages to scrape on the Nodata blog')
     pages = st.selectbox('Pages', list(range(1,1800)))
-    user_genre1 = st.selectbox('Genre 1', list(genres))
-    user_genre2 = st.selectbox('Genre 2', list(genres))
+    user_genre1 = st.selectbox('Genre 1', genres)
+    user_genre2 = st.selectbox('Genre 2', genres)
     user_genres = [user_genre1, user_genre2]
     username = st.text_input('Spotify username')
     playlist_name = st.text_input('Name of new or existing playlist')
