@@ -29,9 +29,6 @@ def break_up_albums(album_ids, sp):
 
 #search function to find tracks on spotify and create list of track IDs to add to the playlist
 def search_spotify(releases, sp):
-    #initialize progress bar
-    my_bar = st.progress(0)
-
     album_ids = []
     for release in releases:
         results = sp.search(q= f"{release['artist']} {release['title']}", type='album', limit=1)
@@ -40,9 +37,6 @@ def search_spotify(releases, sp):
         else:
             print(f"Couldn't find {release['artist']}, {release['title']} :(")
             continue
-        #update progress
-        percent_finished = (releases.index(release) / len(releases)) * 100
-        my_bar.progress(percent_finished)
         time.sleep(1)
     return break_up_albums(album_ids, sp)
 
@@ -119,11 +113,8 @@ def main():
             playlist_id = sp.current_user_playlists()['items'][playlists.index(playlist_name)]['id'] #find ID of existing playlist
 
         #the 2 main functions for scraping & searching spotify
-        with st.spinner("Scraping Nodata.tv"):
-            scrape_results = scraper.scrape(int(pages), user_genres, year) #scrapes nodata.tv
-        st.success('Finished scraping!')
-        with st.spinner('Searching Spotify'):
-            spotify_results = search_spotify(scrape_results, sp) #inserts scraped results into search function
+        scrape_results = scraper.scrape(int(pages), user_genres, year) #scrapes nodata.tv
+        spotify_results = search_spotify(scrape_results, sp) #inserts scraped results into search function
 
         confirm_and_add(spotify_results, username, playlist_id, sp)
 
