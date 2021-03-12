@@ -83,7 +83,7 @@ def main():
         )
     auth_url = oauth.get_authorize_url()
     st.write(auth_url)
-    response = st.text_input('Click the above link, then copy & paste the url in the new tab here, then press enter: ')
+    response = st.text_input('Click the link above, then copy the URL from the new tab, paste it here, and press enter: ')
 
     #defining variables
     genres = pickle.load(open('genres.pkl', 'rb'))
